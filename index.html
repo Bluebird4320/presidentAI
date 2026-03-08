@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>社長AI 壁打ちインタビュー v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-mid: #2d2d4e;
+    --ink-light: #6b6b8a;
+    --paper: #f5f0e8;
+    --paper-warm: #ede8db;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --accent: #8b3a3a;
+    --accent-light: #c96b6b;
+    --success: #2d6a4f;
+    --success-bg: #d8f3dc;
+    --border: rgba(26,26,46,0.10);
+    --shadow: 0 4px 32px rgba(26,26,46,0.10);
+    --gen-glow: rgba(201,168,76,0.15);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='1' cy='1' r='0.35' fill='%231a1a2e' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    border-bottom: 2px solid var(--gold);
+    flex-shrink: 0;
+    position: relative; z-index: 10;
+  }
+  .logo { font-family:'Noto Serif JP',serif; font-weight:700; font-size:16px; color:var(--gold); display:flex; align-items:center; gap:10px; }
+  .logo-badge { background:var(--gold); color:var(--ink); font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:0.05em; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .stat-pill { font-family:'DM Mono',monospace; font-size:12px; color:var(--gold-light); background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25); padding:5px 12px; border-radius:16px; }
+  .stat-pill span { color:var(--gold); font-weight:500; }
+  .hdr-btn { border:none; padding:7px 14px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .btn-icon-only { display:none; }
+  .btn-label { display:inline; }
+  .hdr-btn.gold { background:var(--gold); color:var(--ink); }
+  .hdr-btn.gold:hover { background:var(--gold-light); }
+  .hdr-btn.outline { background:transparent; color:var(--gold-light); border:1px solid rgba(201,168,76,0.35); }
+  .hdr-btn.outline:hover { border-color:var(--gold); color:var(--gold); }
+
+  /* ── LAYOUT ── */
+  .layout { flex:1; display:grid; grid-template-columns:300px 1fr; overflow:hidden; position:relative; z-index:1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { background:white; border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+  .sidebar-section { border-bottom:1px solid var(--border); flex-shrink:0; }
+  .sidebar-title { padding:10px 16px; font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-light); background:var(--paper); display:flex; align-items:center; justify-content:space-between; }
+  .sidebar-title .badge { font-family:'DM Mono',monospace; background:var(--gold); color:var(--ink); font-size:10px; padding:1px 7px; border-radius:10px; font-weight:700; }
+
+  .cat-pills { padding:8px 10px; display:flex; flex-direction:column; gap:3px; }
+  .cat-pill { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px; cursor:pointer; transition:background 0.15s; font-size:12px; color:var(--ink-mid); }
+  .cat-pill:hover { background:var(--paper); }
+  .cat-pill.active { background:rgba(201,168,76,0.1); color:var(--ink); font-weight:500; }
+  .cat-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .cat-num { margin-left:auto; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-light); background:var(--paper-warm); padding:1px 6px; border-radius:8px; }
+  .cat-num.has-data { background:var(--success-bg); color:var(--success); }
+
+  /* Saved list */
+  .saved-scroll { flex:1; overflow-y:auto; }
+  .saved-scroll::-webkit-scrollbar { width:3px; }
+  .saved-scroll::-webkit-scrollbar-thumb { background:var(--paper-warm); }
+
+  .saved-entry {
+    padding:10px 14px;
+    border-bottom:1px solid var(--border);
+    position:relative;
+    transition:background 0.15s;
+  }
+  .saved-entry:hover { background:var(--paper); }
+  .saved-entry:hover .entry-actions { opacity:1; }
+  .se-tags { display:flex; gap:4px; margin-bottom:5px; flex-wrap:wrap; align-items:center; }
+  .se-tag { display:inline-block; font-size:9px; padding:1px 6px; border-radius:3px; color:white; letter-spacing:0.04em; }
+  .se-type { display:inline-block; font-size:9px; padding:1px 6px; border-radius:3px; letter-spacing:0.04em; }
+  .se-type.preset { background:#e3f0ff; color:#2E75B6; }
+  .se-type.generated { background:#fff0d0; color:#c9a84c; }
+  .se-q { font-size:11px; color:var(--ink-light); margin-bottom:3px; line-height:1.4; }
+  .se-a { font-size:12px; color:var(--ink-mid); line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+  /* Entry action buttons (edit/delete) */
+  .entry-actions {
+    position:absolute; top:8px; right:10px;
+    display:flex; gap:4px;
+    opacity:0; transition:opacity 0.2s;
+  }
+  .ea-btn {
+    width:26px; height:26px;
+    border-radius:6px; border:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all 0.15s; font-size:13px;
+  }
+  .ea-btn.edit { background:#e8f0fe; color:#2E75B6; }
+  .ea-btn.edit:hover { background:#2E75B6; color:white; }
+  .ea-btn.del { background:#fce8e6; color:#c5221f; }
+  .ea-btn.del:hover { background:#c5221f; color:white; }
+
+  .empty-state { padding:24px 16px; text-align:center; color:var(--ink-light); font-size:12px; }
+
+  /* ── CHAT ── */
+  .chat { display:flex; flex-direction:column; overflow:hidden; background:var(--paper); }
+
+  .chat-bar { padding:12px 24px; background:white; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .chat-bar-left { display:flex; align-items:center; gap:10px; }
+  .current-dot { width:10px; height:10px; border-radius:50%; transition:background 0.4s; }
+  .current-label { font-family:'Noto Serif JP',serif; font-size:14px; font-weight:600; color:var(--ink); }
+  .mode-badge { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:500; letter-spacing:0.05em; }
+  .mode-badge.auto { background:#fff0d0; color:#c9a84c; }
+  .mode-badge.preset { background:#e3f0ff; color:#2E75B6; }
+  .chat-bar-right { display:flex; gap:8px; align-items:center; }
+  .bar-btn { background:transparent; border:1px solid var(--border); padding:5px 12px; border-radius:6px; font-size:11px; color:var(--ink-light); cursor:pointer; transition:all 0.2s; }
+  .bar-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+  /* Messages */
+  .messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:18px; scroll-behavior:smooth; }
+  .messages::-webkit-scrollbar { width:4px; }
+  .messages::-webkit-scrollbar-thumb { background:var(--paper-warm); border-radius:2px; }
+
+  .msg { display:flex; gap:12px; animation:fadeUp 0.3s ease forwards; opacity:0; transform:translateY(10px); }
+  @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+  .msg.user { flex-direction:row-reverse; }
+
+  .av { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; font-family:'Noto Serif JP',serif; }
+  .av.ai { background:var(--ink); color:var(--gold); }
+  .av.user { background:var(--gold); color:var(--ink); }
+
+  .bubble { max-width:68%; padding:13px 17px; border-radius:14px; font-size:14px; line-height:1.75; color:var(--ink); }
+  .msg.ai .bubble { background:white; border:1px solid var(--border); border-top-left-radius:4px; box-shadow:0 2px 8px rgba(26,26,46,0.05); }
+  .msg.user .bubble { background:var(--ink); color:white; border-top-right-radius:4px; }
+  .msg.ai.generated .bubble { background:linear-gradient(135deg,#fffbf0,white); border-color:rgba(201,168,76,0.4); box-shadow:0 2px 12px var(--gen-glow); }
+
+  .bubble-meta { font-size:10px; opacity:0.5; margin-bottom:5px; display:flex; align-items:center; gap:6px; letter-spacing:0.04em; text-transform:uppercase; }
+  .bubble-skip { margin-top:10px; }
+  .bubble-skip button { font-size:11px; padding:4px 12px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--ink-light); cursor:pointer; transition:all 0.2s; }
+  .bubble-skip button:hover { border-color:var(--gold); color:var(--gold); }
+  .gen-spark { background:var(--gold); color:var(--ink); font-size:9px; padding:0px 5px; border-radius:3px; letter-spacing:0.06em; }
+
+  .typing { display:flex; gap:5px; padding:4px 0; }
+  .tdot { width:6px; height:6px; border-radius:50%; background:var(--ink-light); animation:bounce 1.1s infinite; }
+  .tdot:nth-child(2) { animation-delay:0.18s; }
+  .tdot:nth-child(3) { animation-delay:0.36s; }
+  @keyframes bounce { 0%,60%,100%{opacity:0.3;transform:translateY(0);} 30%{opacity:1;transform:translateY(-5px);} }
+
+
+
+
+
+  /* Input */
+  .input-wrap { padding:14px 24px; border-top:1px solid var(--border); background:white; flex-shrink:0; }
+  .input-hint { font-size:11px; color:var(--ink-light); margin-bottom:7px; display:flex; justify-content:space-between; align-items:center; }
+  .generating-label { font-size:11px; color:var(--gold); display:flex; align-items:center; gap:5px; opacity:0; transition:opacity 0.3s; }
+  .generating-label.visible { opacity:1; }
+  .gen-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .input-row { display:flex; gap:10px; align-items:flex-end; }
+  textarea { flex:1; background:var(--paper); border:1.5px solid var(--border); border-radius:10px; padding:11px 15px; font-family:'Noto Sans JP',sans-serif; font-size:16px; color:var(--ink); resize:none; min-height:50px; max-height:130px; line-height:1.6; transition:border-color 0.2s; }
+  textarea:focus { outline:none; border-color:var(--gold); }
+  textarea::placeholder { color:#bbb; }
+  .send-btn { width:50px; height:50px; background:var(--ink); border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; }
+  .send-btn:hover { background:var(--ink-mid); transform:translateY(-1px); }
+  .send-btn svg { color:var(--gold); }
+  .send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+  /* ── EDIT MODAL ── */
+  .overlay { position:fixed; inset:0; background:rgba(26,26,46,0.65); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:white; border-radius:16px; padding:28px; width:min(600px,92vw); box-shadow:0 20px 60px rgba(26,26,46,0.3); transform:translateY(16px); transition:transform 0.3s; max-height:88vh; display:flex; flex-direction:column; }
+  .overlay.open .modal { transform:translateY(0); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .modal-head h2 { font-family:'Noto Serif JP',serif; font-size:18px; }
+  .modal-close { background:transparent; border:none; font-size:22px; cursor:pointer; color:var(--ink-light); line-height:1; padding:0 4px; }
+  .modal-close:hover { color:var(--ink); }
+  .modal-sub { font-size:12px; color:var(--ink-light); margin-bottom:18px; }
+
+  /* Edit modal fields */
+  .field-group { margin-bottom:16px; }
+  .field-label { font-size:11px; font-weight:500; letter-spacing:0.06em; color:var(--ink-light); text-transform:uppercase; margin-bottom:6px; }
+  .field-input { width:100%; background:var(--paper); border:1.5px solid var(--border); border-radius:8px; padding:10px 13px; font-family:'Noto Sans JP',sans-serif; font-size:16px; color:var(--ink); line-height:1.6; transition:border-color 0.2s; }
+  .field-input:focus { outline:none; border-color:var(--gold); }
+  textarea.field-input { resize:vertical; min-height:100px; }
+
+  /* Export modal */
+  .tab-row { display:flex; gap:7px; margin-bottom:14px; }
+  .tab { padding:6px 14px; border-radius:6px; border:1px solid var(--border); font-size:12px; cursor:pointer; transition:all 0.2s; color:var(--ink-light); }
+  .tab.active { background:var(--ink); color:var(--gold); border-color:var(--ink); }
+  .preview { flex:1; overflow-y:auto; background:var(--paper); border-radius:8px; padding:14px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-mid); white-space:pre-wrap; line-height:1.7; margin-bottom:14px; min-height:200px; }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+  .btn-primary { background:var(--ink); color:var(--gold); border:none; padding:9px 22px; border-radius:7px; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .btn-primary:hover { background:var(--ink-mid); }
+  .btn-danger { background:var(--accent); color:white; border:none; padding:9px 18px; border-radius:7px; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .btn-danger:hover { background:var(--accent-light); }
+  .btn-cancel { background:transparent; color:var(--ink-light); border:1px solid var(--border); padding:9px 16px; border-radius:7px; font-size:13px; cursor:pointer; }
+
+  /* Delete confirm */
+  .del-confirm { background:#fff5f5; border:1px solid #fecaca; border-radius:10px; padding:16px; margin-bottom:16px; }
+  .del-confirm-q { font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500; }
+  .del-confirm-a { font-size:12px; color:var(--ink-light); line-height:1.5; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:28px; right:28px; background:var(--ink); color:var(--gold); padding:10px 20px; border-radius:8px; font-size:13px; border-left:3px solid var(--gold); transform:translateY(60px); opacity:0; transition:all 0.3s; z-index:300; }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    html, body { height: 100dvh; overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+
+    /* Header: compact */
+    header { padding:0 10px; height:44px; min-height:44px; flex-wrap:nowrap; flex-shrink:0; }
+    .logo { font-size:12px; }
+    .logo-badge { display:none; }
+    .stat-pill { font-size:10px; padding:2px 7px; }
+    .header-right { gap:4px; }
+    .hdr-btn { padding:4px 8px; font-size:11px; }
+    .btn-label { display:none; }
+    .btn-icon-only { display:inline; }
+
+    /* Layout: chat on top, sidebar on bottom */
+    .layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      height: 0;
+    }
+
+    /* Chat: fixed height, fills most of screen */
+    .chat {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Chat-bar: 1行だけ */
+    .chat-bar { padding:4px 10px; flex-shrink:0; }
+    .current-label { font-size:11px; }
+    .mode-badge { display:none; }
+
+    /* Messages */
+    .messages { flex:1; padding:10px; gap:8px; overflow-y:auto; min-height:0; }
+    .bubble { max-width:90%; font-size:13px; padding:9px 12px; line-height:1.6; }
+    .av { width:26px; height:26px; font-size:10px; border-radius:6px; flex-shrink:0; }
+    .msg { gap:7px; }
+    .bubble-meta { display:none; }
+
+    /* Input */
+    .input-wrap { padding:6px 10px; flex-shrink:0; }
+    .input-hint { display:none; }
+    textarea { font-size:16px; min-height:40px; max-height:80px; padding:8px 12px; }
+    .send-btn { width:40px; height:40px; border-radius:8px; }
+    .field-input { font-size:16px; }
+
+    /* Sidebar: 高さを内容に合わせて自動調整 */
+    .sidebar {
+      display: block;
+      flex-shrink: 0;
+      border-right: none;
+      border-top: 2px solid var(--border);
+      overflow: visible;
+    }
+    .sidebar-title { cursor:pointer; user-select:none; }
+    .sidebar-title:active { background:var(--paper); }
+
+    /* saved-scrollはQ&A開いたときだけ高さ制限 */
+    .saved-scroll { flex:none; height:auto; min-height:0; max-height:30vh; overflow-y:auto; }
+
+    .cat-pill { font-size:11px; padding:6px 8px; }
+    .saved-entry { padding:10px; }
+    .se-q { font-size:11px; }
+    .se-a { font-size:11px; }
+
+    /* Modals */
+    .modal { padding:16px; border-radius:12px; max-height:92vh; }
+    .modal-head h2 { font-size:15px; }
+
+    /* Toast */
+    .toast { bottom:12px; right:10px; left:10px; font-size:12px; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>社長AI 壁打ちインタビュー</span>
+    <span class="logo-badge">v3 編集対応</span>
+  </div>
+  <div class="header-right">
+    <div class="stat-pill">保存: <span id="savedCount">0</span>件</div>
+    <div class="stat-pill">AI生成: <span id="genCount">0</span>件</div>
+    <button class="hdr-btn outline" onclick="openSettings()">
+      <span class="btn-label">⚙️ 設定</span><span class="btn-icon-only">⚙️</span>
+    </button>
+    <button class="hdr-btn outline" onclick="openExport()">
+      <span class="btn-label">📥 データ出力</span><span class="btn-icon-only">📥</span>
+    </button>
+    <button class="hdr-btn gold" onclick="openDataManager()">
+      <span class="btn-label">📋 データ管理</span><span class="btn-icon-only">📋</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title" onclick="toggleSidebarSection('catSection', 'catChevron')" style="cursor:pointer;">
+        カテゴリ
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" id="totalBadge">0</span>
+          <button onclick="event.stopPropagation();openCatManager()" title="カテゴリを編集" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1;">✏️</button>
+          <span id="catChevron" style="font-size:10px;color:var(--ink-light);transition:transform 0.2s;display:none;">▼</span>
+        </div>
+      </div>
+      <div id="catSection">
+        <div class="cat-pills" id="catPills"></div>
+      </div>
+    </div>
+    <div class="sidebar-title" onclick="toggleSidebarSection('qaSection', 'qaChevron')" style="border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span>保存済みQ&A</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button id="sidebarSelectAllBtn" onclick="event.stopPropagation();sidebarToggleSelectAll()" style="display:none;font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;background:transparent;color:var(--ink-mid);cursor:pointer;">全選択</button>
+        <button id="sidebarBulkDeleteBtn" onclick="event.stopPropagation();sidebarBulkDelete()" style="display:none;font-size:10px;padding:2px 8px;border:1px solid #fecaca;border-radius:5px;background:#fff5f5;color:#c5221f;cursor:pointer;"></button>
+        <span id="qaChevron" style="font-size:10px;color:var(--ink-light);transition:transform 0.2s;display:none;">▼</span>
+      </div>
+    </div>
+    <div id="qaSection">
+      <div class="saved-scroll" id="savedScroll">
+        <div class="empty-state">まだデータがありません</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="chat-bar">
+      <div class="chat-bar-left">
+        <div class="current-dot" id="currentDot"></div>
+        <div class="current-label" id="currentLabel">インタビュー開始</div>
+        <span class="mode-badge preset" id="modeBadge">プリセット質問</span>
+      </div>
+      <div class="chat-bar-right">
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-wrap">
+      <div class="input-hint">
+        <span>💡 Enter で改行 / 送信ボタンで送信</span>
+
+      </div>
+      <div class="input-row">
+        <textarea id="userInput" placeholder="社長のお考えを入力してください…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="send()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT MODAL ── -->
+<div class="overlay" id="editOverlay" onclick="overlayClickEdit(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>✏️ Q&Aを編集する</h2>
+      <button class="modal-close" onclick="closeEdit()">×</button>
+    </div>
+    <p class="modal-sub">質問・回答の内容を自由に修正できます</p>
+    <div class="field-group">
+      <div class="field-label">質問</div>
+      <textarea class="field-input" id="editQ" rows="3"></textarea>
+    </div>
+    <div class="field-group">
+      <div class="field-label">回答</div>
+      <textarea class="field-input" id="editA" rows="6"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEdit()">キャンセル</button>
+      <button class="btn-primary" onclick="saveEdit()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ── -->
+<div class="overlay" id="delOverlay" onclick="overlayClickDel(event)">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h2>🗑️ このQ&Aを削除しますか？</h2>
+      <button class="modal-close" onclick="closeDel()">×</button>
+    </div>
+    <p class="modal-sub">削除したデータは元に戻せません</p>
+    <div class="del-confirm">
+      <div class="del-confirm-q" id="delQ"></div>
+      <div class="del-confirm-a" id="delA"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDel()">キャンセル</button>
+      <button class="btn-danger" onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DATA MANAGER MODAL ── -->
+<div class="overlay" id="managerOverlay" onclick="overlayClickManager(event)">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-head">
+      <h2>📋 データ管理</h2>
+      <button class="modal-close" onclick="closeManager()">×</button>
+    </div>
+    <p class="modal-sub">保存済みのQ&Aを一覧で確認・編集・削除できます</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <input id="searchInput" type="text" class="field-input" placeholder="🔍 質問・回答を検索…" style="flex:1;min-width:200px;" oninput="renderManager()">
+      <select id="filterCat" class="field-input" style="width:160px;" onchange="renderManager()">
+        <option value="">すべてのカテゴリ</option>
+      </select>
+    </div>
+    <div id="managerList" style="flex:1;overflow-y:auto;max-height:420px;border:1px solid var(--border);border-radius:10px;"></div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="managerCount" style="font-size:12px;color:var(--ink-light);"></span>
+        <button id="selectAllBtn" onclick="toggleSelectAll()" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--ink-mid);cursor:pointer;display:none;">全選択</button>
+      </div>
+      <div class="modal-actions" style="margin-top:0;gap:8px;">
+        <button id="bulkDeleteBtn" onclick="bulkDelete()" style="display:none;background:#fff5f5;border:1px solid #fecaca;color:#c5221f;padding:8px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:500;"></button>
+        <button class="btn-cancel" onclick="closeManager()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXPORT MODAL ── -->
+<div class="overlay" id="exportOverlay" onclick="overlayClickExport(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>📥 データを出力する</h2>
+      <button class="modal-close" onclick="closeExport()">×</button>
+    </div>
+    <p class="modal-sub">蓄積したQ&Aデータ（プリセット＋AI自動生成）をダウンロードできます</p>
+    <div class="tab-row">
+      <button class="tab active" onclick="switchFmt('md',this)">Markdown</button>
+      <button class="tab" onclick="switchFmt('json',this)">JSON</button>
+      <button class="tab" onclick="switchFmt('csv',this)">CSV</button>
+    </div>
+    <div class="preview" id="preview"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeExport()">閉じる</button>
+      <button class="btn-primary" onclick="downloadFile()">⬇ ダウンロード</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CATEGORY MANAGER MODAL ── -->
+<div class="overlay" id="catManagerOverlay" onclick="overlayCatManager(event)">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-head">
+      <h2>🗂️ カテゴリ管理</h2>
+      <button class="modal-close" onclick="closeCatManager()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">カテゴリの追加・編集・削除ができます。カテゴリを削除しても保存済みQ&Aは残ります。</p>
+    <div id="catManagerList" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:16px;"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;">
+      <div style="font-size:12px;font-weight:500;color:var(--ink-light);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">新しいカテゴリを追加</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="newCatName" class="field-input" placeholder="カテゴリ名" style="flex:1;">
+        <input type="color" id="newCatColor" value="#2E75B6" style="width:42px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+        <button class="btn-primary" onclick="addCategory()" style="white-space:nowrap;">＋ 追加</button>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-cancel" onclick="closeCatManager()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CATEGORY EDIT MODAL ── -->
+<div class="overlay" id="catEditOverlay" onclick="if(event.target.id==='catEditOverlay')closeCatEdit()">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h2>✏️ カテゴリを編集</h2>
+      <button class="modal-close" onclick="closeCatEdit()">×</button>
+    </div>
+    <div class="field-group">
+      <div class="field-label">カテゴリ名</div>
+      <input type="text" class="field-input" id="editCatName">
+    </div>
+    <div class="field-group">
+      <div class="field-label">カラー</div>
+      <input type="color" id="editCatColor" style="width:60px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;">
+    </div>
+    <div class="field-group">
+      <div class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
+        質問リスト（1行1問）
+        <button onclick="generateCatQuestions()" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.35);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;" id="genCatQsBtn">✨ AIで自動生成</button>
+      </div>
+      <textarea class="field-input" id="editCatQs" rows="8" style="line-height:1.7;" placeholder="質問を1行ずつ入力するか、AIで自動生成してください"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCatEdit()">キャンセル</button>
+      <button class="btn-primary" onclick="saveCatEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+<!-- ── SETTINGS MODAL ── -->
+<div class="overlay" id="settingsOverlay" onclick="if(event.target.id==='settingsOverlay')closeSettings()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h2>⚙️ 設定</h2>
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-right:4px;">
+    <div style="background:var(--paper);border-radius:12px;padding:18px;margin-bottom:4px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-light);margin-bottom:12px;">🔑 Gemini APIキー</div>
+      <!-- 登録済み表示 -->
+      <div id="settingsKeyRegistered" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--success-bg);border:1px solid #a7f3c0;border-radius:9px;padding:11px 14px;margin-bottom:12px;">
+          <span style="color:var(--success);font-size:18px;">✓</span>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;color:var(--success);">APIキーが登録されています</div>
+            <div id="settingsKeyMasked" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--success);opacity:0.8;margin-top:2px;"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="settingsStartEdit()" style="flex:1;background:white;border:1px solid var(--border);color:var(--ink-mid);padding:8px;border-radius:7px;font-size:12px;cursor:pointer;">✏️ 変更する</button>
+          <button onclick="settingsDeleteKey()" style="flex:1;background:#fff5f5;border:1px solid #fecaca;color:#c5221f;padding:8px;border-radius:7px;font-size:12px;cursor:pointer;">🗑️ 削除する</button>
+        </div>
+      </div>
+      <!-- 未登録 / 編集フォーム -->
+      <div id="settingsKeyForm">
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;">
+          <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">Google AI Studio</a> でAPIキーを取得できます（無料）
+        </div>
+        <input type="password" id="settingsKeyInput" class="field-input" placeholder="AIzaSy..." style="margin-bottom:10px;">
+        <div style="display:flex;gap:8px;">
+          <button id="settingsCancelBtn" onclick="settingsCancelEdit()" style="display:none;flex:1;background:transparent;border:1px solid var(--border);color:var(--ink-light);padding:8px;border-radius:7px;font-size:12px;cursor:pointer;">キャンセル</button>
+          <button onclick="settingsSaveKey()" style="flex:1;background:var(--ink);color:var(--gold);border:none;padding:8px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;">保存する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- パーソナル情報 -->
+    <div style="background:var(--paper);border-radius:12px;padding:18px;margin-top:10px;margin-bottom:4px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">👤 社長プロフィール</div>
+      <div style="font-size:11px;color:var(--ink-light);margin-bottom:14px;line-height:1.6;">入力した情報はAIの質問生成に活用され、より個人の価値観・経験に沿った質問が生成されます。</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">氏名</div>
+          <input type="text" id="prof_name" class="field-input" placeholder="例: 山田 太郎">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">年齢</div>
+          <input type="text" id="prof_age" class="field-input" placeholder="例: 45歳">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">出身地</div>
+          <input type="text" id="prof_origin" class="field-input" placeholder="例: 大阪府">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">家族構成</div>
+          <input type="text" id="prof_family" class="field-input" placeholder="例: 妻・子2人">
+        </div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">学歴・職歴（創業前のキャリア）</div>
+        <textarea id="prof_career" class="field-input" rows="2" placeholder="例: 慶應大学卒。大手メーカー勤務を経て2010年に独立。" style="resize:vertical;"></textarea>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">創業のきっかけ・背景</div>
+        <textarea id="prof_founding" class="field-input" rows="2" placeholder="例: 前職で感じた課題を解決したいと思い起業。" style="resize:vertical;"></textarea>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">会社の業種・規模・特徴</div>
+        <textarea id="prof_company" class="field-input" rows="2" placeholder="例: ITコンサル。社員50名。中小企業向けDX支援が主力。" style="resize:vertical;"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">趣味・関心</div>
+          <input type="text" id="prof_hobby" class="field-input" placeholder="例: 読書、マラソン、料理">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">座右の銘・大切にする言葉</div>
+          <input type="text" id="prof_motto" class="field-input" placeholder="例: 一期一会">
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">価値観・信念・人生観</div>
+        <textarea id="prof_values" class="field-input" rows="2" placeholder="例: 失敗を恐れず挑戦することが大切。人との縁を大事にする。" style="resize:vertical;"></textarea>
+      </div>
+      <button onclick="saveProfile()" style="width:100%;background:var(--ink);color:var(--gold);border:none;padding:9px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;">プロフィールを保存する</button>
+    </div>
+
+    <!-- モデル設定 -->
+    <div style="background:var(--paper);border-radius:12px;padding:18px;margin-top:10px;margin-bottom:4px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-light);margin-bottom:12px;">🤖 使用モデル</div>
+      <select id="settingsModelSelect" class="field-input" style="margin-bottom:8px;" onchange="settingsModelChange()">
+        <option value="gemini-2.5-flash">gemini-2.5-flash（推奨・最新）</option>
+        <option value="gemini-2.5-pro">gemini-2.5-pro（高精度・低速）</option>
+        <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite（軽量・低コスト）</option>
+        <option value="custom">カスタム（手動入力）</option>
+      </select>
+      <div id="settingsModelCustom" style="display:none;">
+        <input type="text" id="settingsModelInput" class="field-input" placeholder="例: gemini-3.0-flash" style="margin-bottom:8px;">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--ink-light);">現在: <span id="settingsModelCurrent" style="font-family:'DM Mono',monospace;color:var(--gold);"></span></span>
+        <button onclick="settingsSaveModel()" style="background:var(--ink);color:var(--gold);border:none;padding:6px 16px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;">適用する</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--ink-light);line-height:1.6;">
+        💡 新しいモデルが出た場合は「カスタム」でモデル名を直接入力できます。<br>
+        最新モデルは <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank" style="color:var(--gold);">Google AI ドキュメント</a> で確認できます。
+      </div>
+    </div>
+
+    </div><!-- /scroll wrapper -->
+    <div class="modal-actions" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+      <button class="btn-cancel" onclick="closeSettings()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="apiKeyOverlay">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <h2>🔑 Gemini APIキーの設定</h2>
+      <button class="modal-close" onclick="closeApiKeyModal()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--ink-light);line-height:1.7;margin-bottom:16px;">
+      AI質問生成にはGemini APIキーが必要です。<br>
+      <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">Google AI Studio</a> で無料取得できます。
+    </p>
+    <div id="apiKeySavedBadge" style="display:none;background:#d8f3dc;color:#2d6a4f;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px;">
+      ✓ APIキーが保存されています。変更する場合は下に入力してください。
+    </div>
+    <div class="field-group">
+      <div class="field-label">APIキー</div>
+      <input type="password" class="field-input" id="apiKeyInput" placeholder="AIzaSy...">
+    </div>
+    <div style="font-size:11px;color:var(--ink-light);margin-bottom:16px;">
+      ⚠️ キーはこのブラウザのlocalStorageに保存されます。このPC以外には送信されません。
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeApiKeyModal()">キャンセル</button>
+      <button style="background:transparent;color:#c5221f;border:1px solid #fecaca;padding:9px 14px;border-radius:7px;font-size:12px;cursor:pointer;" onclick="clearApiKey();closeApiKeyModal()">🗑️ キーを削除</button>
+      <button class="btn-primary" onclick="saveApiKey()">保存して生成する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CATEGORIES（編集可能）──
+let CATS = [
+  { id:'management', name:'経営判断・事業方針', color:'#2E75B6', qs:[],
+    defaultQs:['新規事業を始めるかどうかの判断基準を教えてください。','事業撤退を決断するときの基準は何ですか？','短期利益と長期投資のバランスをどうお考えですか？','競合他社が値下げしてきたとき、どう対応しますか？','経営危機に陥ったときの最初の一手は何ですか？','意思決定の際に最も重視するのは何ですか？','過去に最も難しかった経営判断は何ですか？','新しいビジネスチャンスをどう見極めますか？','外部環境の変化に対してどのように備えていますか？','経営者として「やらないこと」を決めるときの基準は何ですか？'] },
+  { id:'people', name:'人材・評価・採用', color:'#70AD47', qs:[],
+    defaultQs:['採用で最も重視するポイントは何ですか？','社員を評価する際の最も大切な軸は何ですか？','「仕事ができる人」とはどういう人だとお考えですか？','リーダーに必要な資質は何だと思いますか？','退職を申し出た優秀な社員にどう対応しますか？','社員の成長を促すためにどんな環境を作っていますか？','問題社員に対してどのように向き合いますか？','チームの多様性についてどのようにお考えですか？','管理職に登用する際の判断基準は何ですか？','社員のモチベーションが下がっていると感じたらどうしますか？'] },
+  { id:'sales', name:'顧客対応・営業方針', color:'#ED7D31', qs:[],
+    defaultQs:['顧客からのクレームにどう対応すべきですか？','値引き交渉にはどう対応すべきですか？','新規顧客と既存顧客、どちらを優先しますか？','顧客満足度をどのように定義していますか？','断るべき仕事・受けるべき仕事の基準は何ですか？','長期的な顧客関係を築くために大切なことは何ですか？','営業担当者に最も求めることは何ですか？','顧客のニーズが変化したと感じたとき、どう対応しますか？','取引先との信頼関係を壊さずに価格交渉するには？','競合他社と比較されたとき、どのように自社をアピールしますか？'] },
+  { id:'culture', name:'社内文化・働き方', color:'#7030A0', qs:[],
+    defaultQs:['この会社で最も大切にしてほしい価値観は何ですか？','残業についてどのような考えをお持ちですか？','失敗した社員にどのような姿勢で接しますか？','社員が自主的に動く組織にするにはどうすればよいですか？','社内のコミュニケーションで大切にしていることは何ですか？','会社のカルチャーを守るために何をしていますか？','リモートワークと出社についてどのようにお考えですか？','社員同士の対立が起きたとき、どのように解決しますか？','会社として「やってはいけないこと」は何ですか？','理想の職場環境とはどのようなものですか？'] },
+  { id:'vision', name:'会社の発展・将来ビジョン', color:'#C00000', qs:[],
+    defaultQs:['この会社を10年後にどういう会社にしたいですか？','社会に対してどのような価値を提供したいですか？','AIの普及によって当社のビジネスはどう変わりますか？','競合他社にはできない、当社だけの強みは何ですか？','今後注力したい事業領域はどこですか？','会社を成長させる上で最大の障壁は何だと思いますか？','業界の5年後をどのように見ていますか？','海外展開や新市場参入についてどのようにお考えですか？','会社として大切にしたいブランドイメージは何ですか？','後継者育成についてどのようにお考えですか？'] },
+  { id:'hr', name:'給与・福利厚生・休暇', color:'#833C00', qs:[],
+    defaultQs:['給与水準を決める際の考え方を教えてください。','社員の給与を上げる判断基準は何ですか？','有給休暇の取得についてどのようにお考えですか？','成果主義と年功序列、どちらを重視しますか？','福利厚生で最も力を入れていることは何ですか？','給与以外で社員に報いる方法として何を大切にしていますか？','副業・兼業についてどのようなお考えをお持ちですか？','育児・介護と仕事の両立についてどのようなサポートをしていますか？','賞与・インセンティブの設計で重視することは何ですか？','社員が「この会社で長く働きたい」と思える環境をどう作りますか？'] },
+];
+
+// ── STATE ──
+let geminiApiKey = '';
+let geminiModel = 'gemini-2.5-flash'; // 設定画面から変更可能
+let savedQAs = [];
+let usedQuestions = []; // 過去に出題した質問を記録（重複排除用）
+let presidentProfile = {}; // 社長プロフィール情報
+let currentCatIdx = 0;
+let currentQIdx = 0;
+let currentQ = '';
+let currentQType = 'preset';
+let awaitingAnswer = false;
+
+let exportFmt = 'md';
+let editingId = null;
+let deletingId = null;
+let pendingCatGenIdx = -1;
+
+// ── INIT ──
+// ── SIDEBAR COLLAPSE (mobile) ──
+function toggleSidebarSection(sectionId, chevronId) {
+  if (window.innerWidth > 640) return;
+  const section = document.getElementById(sectionId);
+  const chevron = document.getElementById(chevronId);
+  const isOpen = section.style.display !== 'none';
+  section.style.display = isOpen ? 'none' : '';
+  if (chevron) chevron.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+  const titleEl = section.previousElementSibling;
+  if (titleEl) titleEl.style.borderBottom = isOpen ? 'none' : '';
+}
+
+function initMobileSidebar() {
+  if (window.innerWidth > 640) return;
+  const catChevron = document.getElementById('catChevron');
+  const qaChevron = document.getElementById('qaChevron');
+  const qaSection = document.getElementById('qaSection');
+  const qaTitleEl = qaSection ? qaSection.previousElementSibling : null;
+  if (catChevron) catChevron.style.display = 'inline';
+  if (qaChevron) qaChevron.style.display = 'inline';
+  // Q&Aは最初から閉じる
+  if (qaSection) qaSection.style.display = 'none';
+  if (qaChevron) qaChevron.style.transform = 'rotate(-90deg)';
+  if (qaTitleEl) qaTitleEl.style.borderBottom = 'none';
+}
+
+function init() {
+  const savedKey = localStorage.getItem('shacho_ai_gemini_key');
+  if (savedKey) geminiApiKey = savedKey;
+  const savedModel = localStorage.getItem('shacho_ai_gemini_model');
+  if (savedModel) geminiModel = savedModel;
+  const savedProfile = localStorage.getItem('shacho_ai_profile');
+  if (savedProfile) presidentProfile = JSON.parse(savedProfile);
+  const savedData = localStorage.getItem('shacho_ai_qas');
+  if (savedData) savedQAs = JSON.parse(savedData);
+
+  const sel = document.getElementById('filterCat');
+  CATS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+
+  renderCats();
+  updateStats();
+  const msg = savedQAs.length > 0
+    ? `こんにちは。\n社長AI学習データ収集システム **v3** へようこそ。\n\n前回の続きから再開できます。保存済み: **${savedQAs.length}件**`
+    : `こんにちは。\n社長AI学習データ収集システム **v3** へようこそ。\n\n回答すると**自動で保存**されます。\nヘッダーの「カテゴリ管理」でカテゴリの**追加・編集・削除**、\n「データ管理」でQ&Aの一括管理ができます。\n\nそれでは始めましょう！`;
+  addMsg('ai', msg);
+  setTimeout(() => addMsg('ai', '👈 左のサイドバーからカテゴリを選んでください。'), 1200);
+  initMobileSidebar();
+}
+
+function persistQAs() {
+  localStorage.setItem('shacho_ai_qas', JSON.stringify(savedQAs));
+}
+
+// ── PROFILE ──
+function saveProfile() {
+  const fields = ['name','age','origin','family','career','founding','company','hobby','motto','values'];
+  fields.forEach(f => {
+    const el = document.getElementById('prof_' + f);
+    if (el) presidentProfile[f] = el.value.trim();
+  });
+  localStorage.setItem('shacho_ai_profile', JSON.stringify(presidentProfile));
+  toast('✓ プロフィールを保存しました');
+}
+
+function loadProfileToForm() {
+  const fields = ['name','age','origin','family','career','founding','company','hobby','motto','values'];
+  fields.forEach(f => {
+    const el = document.getElementById('prof_' + f);
+    if (el) el.value = presidentProfile[f] || '';
+  });
+}
+
+function buildProfilePrompt() {
+  const p = presidentProfile;
+  const lines = [];
+  if (p.name)     lines.push(`氏名: ${p.name}`);
+  if (p.age)      lines.push(`年齢: ${p.age}`);
+  if (p.origin)   lines.push(`出身: ${p.origin}`);
+  if (p.family)   lines.push(`家族構成: ${p.family}`);
+  if (p.career)   lines.push(`学歴・職歴: ${p.career}`);
+  if (p.founding) lines.push(`創業の背景: ${p.founding}`);
+  if (p.company)  lines.push(`会社の特徴: ${p.company}`);
+  if (p.hobby)    lines.push(`趣味・関心: ${p.hobby}`);
+  if (p.motto)    lines.push(`座右の銘: ${p.motto}`);
+  if (p.values)   lines.push(`価値観・信念: ${p.values}`);
+  if (lines.length === 0) return '';
+  return `\n\n## インタビュー対象者のプロフィール\n${lines.join('\n')}\n上記の背景・人物像を踏まえ、その人の経験や価値観に深く刺さる質問を生成してください。`;
+}
+
+// ── CATEGORIES ──
+function renderCats() {
+  document.getElementById('catPills').innerHTML = CATS.map((c,i) => {
+    const n = savedQAs.filter(q => q.catId === c.id).length;
+    return `<div class="cat-pill ${i===currentCatIdx?'active':''}" onclick="jumpCat(${i})">
+      <span class="cat-dot" style="background:${c.color}"></span>
+      <span>${c.name}</span>
+      <span class="cat-num ${n>0?'has-data':''}">${n}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── NEXT QUESTION ──
+function nextQ() {
+  const cat = CATS[currentCatIdx];
+  if (!cat) { allDone(); return; }
+  updateCatHeader(cat);
+  if (currentQIdx >= cat.qs.length) {
+    awaitingAnswer = false;
+    const remaining = CATS.filter((c, i) => i !== currentCatIdx && c.id !== cat.id);
+    if (remaining.length > 0) {
+      addMsg('ai', `「${cat.name}」の質問がすべて終わりました。\nサイドバーから次のカテゴリを選んでください。`);
+    } else {
+      allDone();
+    }
+    return;
+  }
+  currentQ = cat.qs[currentQIdx];
+  currentQType = 'AI生成';
+  askQuestion(currentQ);
+}
+
+function updateCatHeader(cat) {
+  document.getElementById('currentDot').style.background = cat.color;
+  document.getElementById('currentLabel').textContent = cat.name;
+}
+
+function askQuestion(q) {
+  awaitingAnswer = true;
+  if (!usedQuestions.includes(q)) usedQuestions.push(q);
+  const cat = CATS[currentCatIdx];
+  const prefix = `【質問 ${currentQIdx+1}/${cat?.qs.length||'?'}】\n\n${q}`;
+  typing(700).then(() => addQuestionMsg(prefix));
+}
+
+function addQuestionMsg(text) {
+  const msgs = document.getElementById('messages');
+  // 既存のスキップボタンを消す
+  document.querySelectorAll('.bubble-skip').forEach(el => el.remove());
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'currentQuestionMsg';
+  div.innerHTML = `
+    <div class="av ai">AI</div>
+    <div class="bubble">
+      <div class="bubble-meta">インタビュアー</div>
+      ${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}
+      <div class="bubble-skip"><button onclick="skipQ()">スキップ →</button></div>
+    </div>`;
+  msgs.appendChild(div);
+  scrollBottom();
+}
+
+function allDone() {
+  addMsg('ai', `お疲れ様でした！\n全カテゴリ完了。合計 **${savedQAs.length}件** 蓄積されました。\n右上「データ出力」からダウンロードできます。`);
+}
+
+// ── SEND（自動保存）──
+async function send() {
+  const inp = document.getElementById('userInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  addMsg('user', text);
+  if (!awaitingAnswer) { document.getElementById('sendBtn').disabled = false; return; }
+  awaitingAnswer = false;
+  document.querySelectorAll('.bubble-skip').forEach(el => el.remove());
+  // 自動保存
+  autoSaveQA(text);
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function autoSaveQA(answer) {
+  const cat = CATS[currentCatIdx] || CATS[CATS.length-1];
+  savedQAs.push({
+    id: Date.now(),
+    catId: cat.id, catName: cat.name, catColor: cat.color,
+    question: currentQ, answer,
+    qType: currentQType,
+    ts: new Date().toISOString(),
+  });
+  persistQAs();
+  updateStats();
+  toast('✓ 自動保存しました');
+  currentQIdx++;
+  setTimeout(() => nextQ(), 400);
+}
+
+
+
+function skipQ() {
+  awaitingAnswer = false;
+  document.querySelectorAll('.bubble-skip').forEach(el => el.remove());
+  currentQIdx++;
+  addMsg('ai', 'スキップしました。次の質問へ進みます。');
+  setTimeout(() => nextQ(), 500);
+}
+
+// ── EDIT ──
+function openEdit(id) {
+  const qa = savedQAs.find(q => q.id === id);
+  if (!qa) return;
+  editingId = id;
+  document.getElementById('editQ').value = qa.question;
+  document.getElementById('editA').value = qa.answer;
+  document.getElementById('editOverlay').classList.add('open');
+}
+function closeEdit() { document.getElementById('editOverlay').classList.remove('open'); editingId = null; }
+function overlayClickEdit(e) { if (e.target.id === 'editOverlay') closeEdit(); }
+
+function saveEdit() {
+  if (!editingId) return;
+  const idx = savedQAs.findIndex(q => q.id === editingId);
+  if (idx === -1) return;
+  const newQ = document.getElementById('editQ').value.trim();
+  const newA = document.getElementById('editA').value.trim();
+  if (!newQ || !newA) { toast('質問と回答を入力してください'); return; }
+  savedQAs[idx].question = newQ;
+  savedQAs[idx].answer = newA;
+  savedQAs[idx].edited = true;
+  savedQAs[idx].editedAt = new Date().toISOString();
+  closeEdit();
+  persistQAs();
+  updateStats();
+  renderManager();
+  toast('✏️ 編集を保存しました');
+}
+
+// ── DELETE ──
+function openDelete(id) {
+  const qa = savedQAs.find(q => q.id === id);
+  if (!qa) return;
+  deletingId = id;
+  document.getElementById('delQ').textContent = 'Q: ' + qa.question;
+  document.getElementById('delA').textContent = 'A: ' + qa.answer.substring(0, 100) + (qa.answer.length > 100 ? '…' : '');
+  document.getElementById('delOverlay').classList.add('open');
+}
+function closeDel() { document.getElementById('delOverlay').classList.remove('open'); deletingId = null; }
+function overlayClickDel(e) { if (e.target.id === 'delOverlay') closeDel(); }
+
+function confirmDelete() {
+  if (!deletingId) return;
+  savedQAs = savedQAs.filter(q => q.id !== deletingId);
+  closeDel();
+  persistQAs();
+  requestAnimationFrame(() => {
+    updateStats();
+    renderManager();
+    toast('🗑️ 削除しました');
+  });
+}
+
+// ── DATA MANAGER ──
+let selectedIds = new Set();
+
+function openDataManager() {
+  selectedIds.clear();
+  renderManager();
+  document.getElementById('managerOverlay').classList.add('open');
+}
+function closeManager() {
+  selectedIds.clear();
+  document.getElementById('managerOverlay').classList.remove('open');
+}
+function overlayClickManager(e) { if (e.target.id === 'managerOverlay') closeManager(); }
+
+function renderManager() {
+  const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const catFilter = document.getElementById('filterCat')?.value || '';
+  let filtered = savedQAs.filter(qa => {
+    const matchCat = !catFilter || qa.catId === catFilter;
+    const matchSearch = !search || qa.question.toLowerCase().includes(search) || qa.answer.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  const list = document.getElementById('managerList');
+  if (!list) return;
+
+  document.getElementById('managerCount').textContent = `${filtered.length} 件表示 / 全 ${savedQAs.length} 件`;
+
+  // 全選択ボタン表示制御
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  if (selectAllBtn) selectAllBtn.style.display = filtered.length > 0 ? 'inline-block' : 'none';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding:32px;">該当するデータがありません</div>';
+    updateBulkDeleteBtn(filtered);
+    return;
+  }
+
+  list.innerHTML = filtered.map((qa, i) => `
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);${i===filtered.length-1?'border-bottom:none;':''}display:flex;gap:10px;align-items:flex-start;">
+      <input type="checkbox" data-id="${qa.id}" onchange="toggleSelect(${qa.id})" ${selectedIds.has(qa.id)?'checked':''} style="margin-top:3px;width:15px;height:15px;cursor:pointer;flex-shrink:0;">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px;">
+          <div style="flex:1;">
+            <div style="display:flex;gap:5px;margin-bottom:5px;flex-wrap:wrap;">
+              <span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;color:white;background:${qa.catColor};">${qa.catName}</span>
+              <span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;${qa.qType==='generated'?'background:#fff0d0;color:#c9a84c;':'background:#e3f0ff;color:#2E75B6;'}">${qa.qType==='generated'?'✨AI生成':'プリセット'}</span>
+              ${qa.edited ? '<span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;background:#f0fdf4;color:#15803d;">編集済み</span>' : ''}
+            </div>
+            <div style="font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;">${escHtml(qa.question)}</div>
+            <div style="font-size:12px;color:var(--ink-light);line-height:1.5;">${escHtml(qa.answer)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px;">
+            <button class="ea-btn edit" onclick="openEditFromManager(${qa.id})" title="編集">✏️</button>
+            <button class="ea-btn del" onclick="openDeleteFromManager(${qa.id})" title="削除">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--ink-light);font-family:'DM Mono',monospace;">${new Date(qa.ts).toLocaleString('ja-JP')}</div>
+      </div>
+    </div>`).join('');
+
+  updateBulkDeleteBtn(filtered);
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
+  }
+  updateBulkDeleteBtn();
+}
+
+function toggleSelectAll() {
+  const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const catFilter = document.getElementById('filterCat')?.value || '';
+  const filtered = savedQAs.filter(qa => {
+    const matchCat = !catFilter || qa.catId === catFilter;
+    const matchSearch = !search || qa.question.toLowerCase().includes(search) || qa.answer.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+  const allChecked = filtered.every(qa => selectedIds.has(qa.id));
+  if (allChecked) {
+    filtered.forEach(qa => selectedIds.delete(qa.id));
+  } else {
+    filtered.forEach(qa => selectedIds.add(qa.id));
+  }
+  renderManager();
+}
+
+function updateBulkDeleteBtn(filtered) {
+  const btn = document.getElementById('bulkDeleteBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  if (!btn) return;
+  if (selectedIds.size > 0) {
+    btn.style.display = 'inline-block';
+    btn.textContent = `🗑️ 選択した ${selectedIds.size} 件を削除`;
+    if (selectAllBtn) {
+      const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      const catFilter = document.getElementById('filterCat')?.value || '';
+      const f = filtered || savedQAs.filter(qa => {
+        const matchCat = !catFilter || qa.catId === catFilter;
+        const matchSearch = !search || qa.question.toLowerCase().includes(search) || qa.answer.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+      });
+      selectAllBtn.textContent = f.every(qa => selectedIds.has(qa.id)) ? '全解除' : '全選択';
+    }
+  } else {
+    btn.style.display = 'none';
+    if (selectAllBtn) selectAllBtn.textContent = '全選択';
+  }
+}
+
+function bulkDelete() {
+  if (selectedIds.size === 0) return;
+  if (!confirm(`選択した ${selectedIds.size} 件を削除しますか？`)) return;
+  savedQAs = savedQAs.filter(qa => !selectedIds.has(qa.id));
+  selectedIds.clear();
+  persistQAs();
+  renderSidebar();
+  renderCats();
+  toast(`🗑️ ${savedQAs.length >= 0 ? selectedIds.size === 0 ? '削除しました' : '' : ''}削除しました`);
+  renderManager();
+}
+
+function openEditFromManager(id) {
+  closeManager();
+  setTimeout(() => openEdit(id), 200);
+}
+function openDeleteFromManager(id) {
+  closeManager();
+  setTimeout(() => openDelete(id), 200);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── API KEY MODAL ──
+let generateAfterSave = false;
+function openApiKeyModal(andGenerate = false) {
+  generateAfterSave = andGenerate;
+  document.getElementById('apiKeyInput').value = '';
+  const badge = document.getElementById('apiKeySavedBadge');
+  badge.style.display = geminiApiKey ? 'block' : 'none';
+  document.getElementById('apiKeyOverlay').classList.add('open');
+}
+function closeApiKeyModal() {
+  document.getElementById('apiKeyOverlay').classList.remove('open');
+}
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { toast('APIキーを入力してください'); return; }
+  geminiApiKey = key;
+  localStorage.setItem('shacho_ai_gemini_key', key);
+  closeApiKeyModal();
+  toast('✓ APIキーを保存しました（次回から入力不要）');
+  if (pendingCatGenIdx >= 0) {
+    const idx = pendingCatGenIdx;
+    pendingCatGenIdx = -1;
+    setTimeout(() => autoGenerateCatQuestions(idx), 300);
+  }
+}
+function clearApiKey() {
+  geminiApiKey = '';
+  localStorage.removeItem('shacho_ai_gemini_key');
+  toast('APIキーを削除しました');
+}
+
+function jumpCat(idx) {
+  currentCatIdx = idx; currentQIdx = 0;
+  awaitingAnswer = false;
+  renderCats();
+  updateCatHeader(CATS[idx]);
+  const cat = CATS[idx];
+  addMsg('ai', `「${cat.name}」に移動しました。`);
+
+  // qs が手動編集済み（カテゴリ編集モーダルで保存）かどうかを判定
+  const isManuallySet = cat.manuallySet === true;
+
+  if (isManuallySet && cat.qs.length > 0) {
+    // 手動設定済みはそのまま使用
+    setTimeout(() => nextQ(), 500);
+  } else if (geminiApiKey) {
+    // APIキーあり → 毎回AI生成（新鮮な質問を提供）
+    cat.qs = []; // リセットして再生成
+    setTimeout(() => autoGenerateCatQuestions(idx), 500);
+  } else {
+    // APIキーなし → defaultQs をフォールバック使用
+    const fallback = cat.defaultQs || [];
+    if (fallback.length > 0) {
+      cat.qs = [...fallback];
+      addMsg('ai', `APIキー未設定のため、プリセット質問を使用しています。\n「⚙️ 設定」からAPIキーを登録するとAI生成に切り替わります。`);
+      setTimeout(() => nextQ(), 700);
+    } else {
+      addMsg('ai', `質問がありません。「⚙️ 設定」からAPIキーを登録すると質問を自動生成できます。`);
+      pendingCatGenIdx = idx;
+      openApiKeyModal(false);
+    }
+  }
+}
+
+async function autoGenerateCatQuestions(idx) {
+  const cat = CATS[idx];
+  if (!geminiApiKey) {
+    addMsg('ai', `「${cat.name}」にはまだ質問がありません。\nAPIキーを設定すると質問を自動生成できます。\n右上「⚙️ 設定」からAPIキーを登録してください。`);
+    // APIキー設定後に改めてこのカテゴリで生成できるよう pending を記憶
+    pendingCatGenIdx = idx;
+    openApiKeyModal(false);
+    return;
+  }
+  addMsg('ai', `✨ 「${cat.name}」の質問をAIが生成しています…`);
+
+  const usedList = usedQuestions.length > 0
+    ? `\n\n## 以下の質問はすでに出題済みです。絶対に重複させないでください：\n${usedQuestions.map((q,i) => `${i+1}. ${q}`).join('\n')}`
+    : '';
+
+  const prompt = `あなたはIT企業の社長にインタビューするプロのインタビュアーです。
+「${cat.name}」というカテゴリについて、社長の考えや価値観を深く引き出すための質問を10問生成してください。
+
+## 条件
+- IT企業の社長向けの質問にする
+- 「なぜ」「どのように」「具体的には」などで深掘りできる質問
+- 社長の価値観・判断基準・方針が明確になる質問
+- 各質問は40文字以内で簡潔に
+- JSON配列のみ返す: ["質問1", "質問2", ...]
+- 他のテキストは一切不要${usedList}${buildProfilePrompt()}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await res.json();
+    if (data.error) { addMsg('ai', `⚠️ APIエラー: ${data.error.message}`); return; }
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    const qs = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    if (Array.isArray(qs) && qs.length > 0) {
+      CATS[idx].qs = qs;
+      renderCats();
+      addMsg('ai', `✅ ${qs.length}問を生成しました！さっそく始めます。`);
+      setTimeout(() => nextQ(), 600);
+    }
+  } catch(e) {
+    addMsg('ai', '⚠️ 質問の生成に失敗しました。APIキーをご確認ください。');
+  }
+}
+
+// ── MESSAGES ──
+function addMsg(type, text, isGen=false) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${type}${isGen?' generated':''}`;
+  const label = type==='ai'?(isGen?'AI生成インタビュアー':'インタビュアー'):'社長';
+  const genBadge = isGen ? '<span class="gen-spark">AI生成</span>' : '';
+  div.innerHTML = `
+    <div class="av ${type}">${type==='ai'?'AI':'社'}</div>
+    <div class="bubble">
+      <div class="bubble-meta">${label} ${genBadge}</div>
+      ${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}
+    </div>`;
+  msgs.appendChild(div);
+  scrollBottom();
+}
+
+let typingEl = null;
+function typing(delay) {
+  return new Promise(res => {
+    const msgs = document.getElementById('messages');
+    typingEl = document.createElement('div');
+    typingEl.className = 'msg ai'; typingEl.id = 'typingEl';
+    typingEl.innerHTML = `<div class="av ai">AI</div><div class="bubble"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+    msgs.appendChild(typingEl);
+    scrollBottom();
+    setTimeout(() => { typingEl?.remove(); typingEl = null; res(); }, delay);
+  });
+}
+function scrollBottom() { const m=document.getElementById('messages'); m.scrollTop=m.scrollHeight; }
+
+// ── STATS ──
+function updateStats() {
+  document.getElementById('savedCount').textContent = savedQAs.length;
+  document.getElementById('totalBadge').textContent = savedQAs.length;
+  renderCats();
+  renderSaved();
+}
+
+let sidebarSelectedIds = new Set();
+
+function renderSaved() {
+  const el = document.getElementById('savedScroll');
+  const selectAllBtn = document.getElementById('sidebarSelectAllBtn');
+  const bulkBtn = document.getElementById('sidebarBulkDeleteBtn');
+
+  // 一度空にして確実に再描画させる（スマホブラウザ対応）
+  el.innerHTML = '';
+
+  if (!savedQAs.length) {
+    el.innerHTML = '<div class="empty-state">まだデータがありません</div>';
+    if (selectAllBtn) selectAllBtn.style.display = 'none';
+    if (bulkBtn) { bulkBtn.style.display = 'none'; }
+    sidebarSelectedIds.clear();
+    return;
+  }
+
+  if (selectAllBtn) selectAllBtn.style.display = 'inline-block';
+
+  const html = [...savedQAs].reverse().map(qa => `
+    <div class="saved-entry" style="display:flex;gap:8px;align-items:flex-start;">
+      <input type="checkbox" data-id="${qa.id}" onchange="sidebarToggleSelect(${qa.id})" ${sidebarSelectedIds.has(qa.id)?'checked':''} style="margin-top:4px;width:14px;height:14px;cursor:pointer;flex-shrink:0;">
+      <div style="flex:1;min-width:0;">
+        <div class="entry-actions">
+          <button class="ea-btn edit" onclick="openEdit(${qa.id})" title="編集">✏️</button>
+          <button class="ea-btn del" onclick="openDelete(${qa.id})" title="削除">🗑️</button>
+        </div>
+        <div class="se-tags">
+          <span class="se-tag" style="background:${qa.catColor}">${qa.catName}</span>
+          <span class="se-type ${qa.qType}">${qa.qType==='generated'?'✨AI生成':'プリセット'}</span>
+          ${qa.edited?'<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#f0fdf4;color:#15803d;">編集済み</span>':''}
+        </div>
+        <div class="se-q">${qa.question}</div>
+        <div class="se-a">${qa.answer}</div>
+      </div>
+    </div>`).join('');
+
+  requestAnimationFrame(() => {
+    el.innerHTML = html;
+    updateSidebarBulkBtn();
+  });
+}
+
+function sidebarToggleSelect(id) {
+  if (sidebarSelectedIds.has(id)) {
+    sidebarSelectedIds.delete(id);
+  } else {
+    sidebarSelectedIds.add(id);
+  }
+  updateSidebarBulkBtn();
+}
+
+function sidebarToggleSelectAll() {
+  const allChecked = savedQAs.every(qa => sidebarSelectedIds.has(qa.id));
+  if (allChecked) {
+    sidebarSelectedIds.clear();
+  } else {
+    savedQAs.forEach(qa => sidebarSelectedIds.add(qa.id));
+  }
+  renderSaved();
+}
+
+function updateSidebarBulkBtn() {
+  const btn = document.getElementById('sidebarBulkDeleteBtn');
+  const selectAllBtn = document.getElementById('sidebarSelectAllBtn');
+  if (!btn) return;
+  if (sidebarSelectedIds.size > 0) {
+    btn.style.display = 'inline-block';
+    btn.textContent = `🗑️ ${sidebarSelectedIds.size}件削除`;
+    if (selectAllBtn) selectAllBtn.textContent = savedQAs.every(qa => sidebarSelectedIds.has(qa.id)) ? '全解除' : '全選択';
+  } else {
+    btn.style.display = 'none';
+    if (selectAllBtn) selectAllBtn.textContent = '全選択';
+  }
+}
+
+function sidebarBulkDelete() {
+  if (sidebarSelectedIds.size === 0) return;
+  if (!confirm(`選択した ${sidebarSelectedIds.size} 件を削除しますか？`)) return;
+  const count = sidebarSelectedIds.size;
+  savedQAs = savedQAs.filter(qa => !sidebarSelectedIds.has(qa.id));
+  sidebarSelectedIds.clear();
+  persistQAs();
+  requestAnimationFrame(() => {
+    renderSaved();
+    renderCats();
+    document.getElementById('savedCount').textContent = savedQAs.length;
+    document.getElementById('totalBadge').textContent = savedQAs.length;
+    toast(`🗑️ ${count}件を削除しました`);
+  });
+}
+
+// ── SETTINGS MODAL ──
+function openSettings() {
+  // APIキー表示
+  const registered = document.getElementById('settingsKeyRegistered');
+  const form = document.getElementById('settingsKeyForm');
+  if (geminiApiKey) {
+    registered.style.display = 'block';
+    form.style.display = 'none';
+    const masked = geminiApiKey.substring(0, 8) + '••••••••••••••••••••' + geminiApiKey.slice(-4);
+    document.getElementById('settingsKeyMasked').textContent = masked;
+  } else {
+    registered.style.display = 'none';
+    form.style.display = 'block';
+    document.getElementById('settingsKeyInput').value = '';
+    document.getElementById('settingsCancelBtn').style.display = 'none';
+  }
+  // モデル表示
+  document.getElementById('settingsModelCurrent').textContent = geminiModel;
+  const presets = ['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash-lite'];
+  const sel = document.getElementById('settingsModelSelect');
+  if (presets.includes(geminiModel)) {
+    sel.value = geminiModel;
+    document.getElementById('settingsModelCustom').style.display = 'none';
+  } else {
+    sel.value = 'custom';
+    document.getElementById('settingsModelCustom').style.display = 'block';
+    document.getElementById('settingsModelInput').value = geminiModel;
+  }
+  document.getElementById('settingsOverlay').classList.add('open');
+  loadProfileToForm();
+}
+function settingsModelChange() {
+  const val = document.getElementById('settingsModelSelect').value;
+  document.getElementById('settingsModelCustom').style.display = val === 'custom' ? 'block' : 'none';
+}
+function settingsSaveModel() {
+  const sel = document.getElementById('settingsModelSelect').value;
+  const model = sel === 'custom'
+    ? document.getElementById('settingsModelInput').value.trim()
+    : sel;
+  if (!model) { toast('モデル名を入力してください'); return; }
+  geminiModel = model;
+  localStorage.setItem('shacho_ai_gemini_model', model);
+  document.getElementById('settingsModelCurrent').textContent = model;
+  toast(`✓ モデルを「${model}」に設定しました`);
+}
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+function settingsStartEdit() {
+  document.getElementById('settingsKeyRegistered').style.display = 'none';
+  document.getElementById('settingsKeyForm').style.display = 'block';
+  document.getElementById('settingsKeyInput').value = '';
+  document.getElementById('settingsCancelBtn').style.display = 'block';
+  document.getElementById('settingsKeyInput').focus();
+}
+function settingsCancelEdit() {
+  document.getElementById('settingsKeyRegistered').style.display = 'block';
+  document.getElementById('settingsKeyForm').style.display = 'none';
+}
+function settingsSaveKey() {
+  const key = document.getElementById('settingsKeyInput').value.trim();
+  if (!key) { toast('APIキーを入力してください'); return; }
+  geminiApiKey = key;
+  localStorage.setItem('shacho_ai_gemini_key', key);
+  toast('✓ APIキーを保存しました');
+  openSettings(); // 表示を更新
+}
+function settingsDeleteKey() {
+  if (!confirm('APIキーを削除しますか？\nAI質問生成が使えなくなります。')) return;
+  geminiApiKey = '';
+  localStorage.removeItem('shacho_ai_gemini_key');
+  toast('🗑️ APIキーを削除しました');
+  openSettings(); // 表示を更新
+}
+
+// ── CATEGORY MANAGER ──
+let editingCatId = null;
+
+function openCatManager() {
+  renderCatManagerList();
+  document.getElementById('catManagerOverlay').classList.add('open');
+}
+function closeCatManager() {
+  document.getElementById('catManagerOverlay').classList.remove('open');
+}
+function overlayCatManager(e) {
+  if (e.target.id === 'catManagerOverlay') closeCatManager();
+}
+
+function renderCatManagerList() {
+  const el = document.getElementById('catManagerList');
+  if (!CATS.length) { el.innerHTML = '<div class="empty-state">カテゴリがありません</div>'; return; }
+  el.innerHTML = CATS.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper);border-radius:10px;border:1px solid var(--border);">
+      <span style="width:14px;height:14px;border-radius:50%;background:${c.color};flex-shrink:0;"></span>
+      <span style="flex:1;font-size:13px;font-weight:500;">${escHtml(c.name)}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-light);background:var(--paper-warm);padding:2px 8px;border-radius:6px;">${c.qs.length}問</span>
+      <button class="ea-btn edit" onclick="openCatEdit('${c.id}')" title="編集">✏️</button>
+      <button class="ea-btn del" onclick="deleteCat('${c.id}')" title="削除">🗑️</button>
+    </div>`).join('');
+}
+
+function addCategory() {
+  const name = document.getElementById('newCatName').value.trim();
+  const color = document.getElementById('newCatColor').value;
+  if (!name) { toast('カテゴリ名を入力してください'); return; }
+  const id = 'cat_' + Date.now();
+  CATS.push({ id, name, color, qs: [] });
+  document.getElementById('newCatName').value = '';
+  renderCatManagerList();
+  renderCats();
+  refreshFilterDropdown();
+  toast(`✓ 「${name}」を追加しました`);
+}
+
+function deleteCat(id) {
+  const cat = CATS.find(c => c.id === id);
+  if (!cat) return;
+  if (!confirm(`「${cat.name}」を削除しますか？\n（保存済みQ&Aは残ります）`)) return;
+  CATS = CATS.filter(c => c.id !== id);
+  if (currentCatIdx >= CATS.length) currentCatIdx = Math.max(0, CATS.length - 1);
+  renderCatManagerList();
+  renderCats();
+  refreshFilterDropdown();
+  toast(`🗑️ 「${cat.name}」を削除しました`);
+}
+
+function openCatEdit(id) {
+  const cat = CATS.find(c => c.id === id);
+  if (!cat) return;
+  editingCatId = id;
+  document.getElementById('editCatName').value = cat.name;
+  document.getElementById('editCatColor').value = cat.color;
+  document.getElementById('editCatQs').value = cat.qs.join('\n');
+  closeCatManager();
+  setTimeout(() => document.getElementById('catEditOverlay').classList.add('open'), 150);
+}
+function closeCatEdit() {
+  document.getElementById('catEditOverlay').classList.remove('open');
+  editingCatId = null;
+  setTimeout(() => openCatManager(), 150);
+}
+
+function saveCatEdit() {
+  const idx = CATS.findIndex(c => c.id === editingCatId);
+  if (idx === -1) return;
+  const name = document.getElementById('editCatName').value.trim();
+  const color = document.getElementById('editCatColor').value;
+  const qs = document.getElementById('editCatQs').value
+    .split('\n').map(q => q.trim()).filter(q => q.length > 0);
+  if (!name) { toast('カテゴリ名を入力してください'); return; }
+  CATS[idx].name = name;
+  CATS[idx].color = color;
+  CATS[idx].qs = qs;
+  CATS[idx].manuallySet = qs.length > 0; // 質問が手動入力されていればフラグを立てる
+  document.getElementById('catEditOverlay').classList.remove('open');
+  editingCatId = null;
+  renderCats();
+  refreshFilterDropdown();
+  toast(`✏️ 「${name}」を更新しました`);
+  setTimeout(() => openCatManager(), 150);
+}
+
+async function generateCatQuestions() {
+  if (!geminiApiKey) { openApiKeyModal(false); toast('APIキーを設定してから再度お試しください'); return; }
+  const catName = document.getElementById('editCatName').value.trim();
+  if (!catName) { toast('先にカテゴリ名を入力してください'); return; }
+
+  const btn = document.getElementById('genCatQsBtn');
+  btn.textContent = '⏳ 生成中…';
+  btn.disabled = true;
+
+  const usedList = usedQuestions.length > 0
+    ? `\n\n## 以下の質問はすでに出題済みです。絶対に重複・類似した質問を生成しないでください：\n${usedQuestions.map((q,i) => `${i+1}. ${q}`).join('\n')}`
+    : '';
+  const prompt = `あなたはIT企業の社長にインタビューするプロのインタビュアーです。
+「${catName}」というカテゴリについて、社長の考えや価値観を深く引き出すための質問を10問生成してください。
+
+## 条件
+- IT企業の社長向けの質問にする
+- 「なぜ」「どのように」「具体的には」などで深掘りできる質問
+- 社長の価値観・判断基準・方針が明確になる質問
+- 各質問は40文字以内で簡潔に
+- JSON配列のみ返す: ["質問1", "質問2", ...]
+- 他のテキストは一切不要${usedList}${buildProfilePrompt()}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await res.json();
+    if (data.error) { toast(`⚠️ APIエラー: ${data.error.message}`); return; }
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    const qs = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    if (Array.isArray(qs) && qs.length > 0) {
+      const existing = document.getElementById('editCatQs').value.trim();
+      document.getElementById('editCatQs').value = existing
+        ? existing + '\n' + qs.join('\n')
+        : qs.join('\n');
+      toast(`✨ ${qs.length}問を生成しました`);
+    }
+  } catch(e) {
+    toast('⚠️ 生成に失敗しました。APIキーをご確認ください。');
+  } finally {
+    btn.textContent = '✨ AIで自動生成';
+    btn.disabled = false;
+  }
+}
+
+function refreshFilterDropdown() {
+  const sel = document.getElementById('filterCat');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">すべてのカテゴリ</option>';
+  CATS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+  sel.value = current;
+}
+
+// ── EXPORT ──
+function buildMD() {
+  const g = {};
+  savedQAs.forEach(q => { (g[q.catName]=(g[q.catName]||[])).push(q); });
+  let s = `# 社長AI 学習データ\n生成日時: ${new Date().toLocaleString('ja-JP')}\n総件数: ${savedQAs.length}件（うちAI生成: ${savedQAs.filter(q=>q.qType==='generated').length}件）\n\n---\n\n`;
+  Object.entries(g).forEach(([cat,qs]) => {
+    s += `## ${cat}\n\n`;
+    qs.forEach((q,i) => { s += `### Q${i+1}${q.qType==='generated'?' ✨AI生成':''}: ${q.question}\n\n**A:** ${q.answer}\n\n---\n\n`; });
+  });
+  return s;
+}
+function buildJSON() {
+  return JSON.stringify({ meta:{createdAt:new Date().toISOString(),total:savedQAs.length,aiGenerated:savedQAs.filter(q=>q.qType==='generated').length}, data:savedQAs },null,2);
+}
+function buildCSV() {
+  const rows=[['No','カテゴリ','質問タイプ','質問','回答','編集済み','日時']];
+  savedQAs.forEach((q,i)=>rows.push([i+1,q.catName,q.qType==='generated'?'AI生成':'プリセット',`"${q.question}"`,`"${q.answer.replace(/"/g,'""')}"`,q.edited?'yes':'no',q.ts]));
+  return rows.map(r=>r.join(',')).join('\n');
+}
+const builders = { md:buildMD, json:buildJSON, csv:buildCSV };
+
+function openExport() {
+  if (!savedQAs.length) { toast('まだデータがありません'); return; }
+  document.getElementById('preview').textContent = builders[exportFmt]();
+  document.getElementById('exportOverlay').classList.add('open');
+}
+function closeExport() { document.getElementById('exportOverlay').classList.remove('open'); }
+function overlayClickExport(e) { if (e.target.id==='exportOverlay') closeExport(); }
+function switchFmt(fmt,btn) {
+  exportFmt=fmt;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('preview').textContent = builders[fmt]();
+}
+function downloadFile() {
+  const fmtMap={md:['shacho_ai_data.md','text/markdown'],json:['shacho_ai_data.json','application/json'],csv:['shacho_ai_data.csv','text/csv']};
+  const [name,type]=fmtMap[exportFmt];
+  const blob=new Blob([builders[exportFmt]()],{type});
+  Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:name}).click();
+  toast(`${name} をダウンロードしました`);
+  closeExport();
+}
+
+// ── UTILS ──
+function handleKey(e) { /* Enter = newline, send via button only */ }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,130)+'px'; }
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── iOS 入力時ズーム防止 ──
+// iOSはfont-size:16px未満のinput/textareaでズームするが、
+// モーダル内などでサイズが変動するためJSでも対策する
+(function() {
+  function fixViewport(scale) {
+    const vp = document.querySelector('meta[name=viewport]');
+    if (vp) vp.content = `width=device-width, initial-scale=1.0, maximum-scale=${scale}, user-scalable=no`;
+  }
+  document.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+      // フォーカス時はスケールを固定してズームを防ぐ
+      fixViewport(1.0);
+    }
+  });
+  document.addEventListener('focusout', function() {
+    // フォーカスが外れたら元に戻す
+    setTimeout(() => fixViewport(1.0), 100);
+  });
+})();
+
+init();
+</script>
+</body>
+</html>
