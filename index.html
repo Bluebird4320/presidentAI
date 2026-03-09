@@ -66,7 +66,7 @@
   .layout { flex:1; display:grid; grid-template-columns:300px 1fr; overflow:hidden; position:relative; z-index:1; }
 
   /* ── SIDEBAR ── */
-  .sidebar { background:white; border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+  .sidebar { background:white; border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; min-height:0; }
   .sidebar-section { border-bottom:1px solid var(--border); flex-shrink:0; }
   .sidebar-title { padding:10px 16px; font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-light); background:var(--paper); display:flex; align-items:center; justify-content:space-between; }
   .sidebar-title .badge { font-family:'DM Mono',monospace; background:var(--gold); color:var(--ink); font-size:10px; padding:1px 7px; border-radius:10px; font-weight:700; }
@@ -80,7 +80,7 @@
   .cat-num.has-data { background:var(--success-bg); color:var(--success); }
 
   /* Saved list */
-  .saved-scroll { flex:1; overflow-y:auto; }
+  .saved-scroll { flex:1; overflow-y:auto; min-height:0; }
   .saved-scroll::-webkit-scrollbar { width:3px; }
   .saved-scroll::-webkit-scrollbar-thumb { background:var(--paper-warm); }
 
@@ -760,7 +760,10 @@ function init() {
     ? `こんにちは。\n社長AI学習データ収集システム **v3** へようこそ。\n\n前回の続きから再開できます。保存済み: **${savedQAs.length}件**`
     : `こんにちは。\n社長AI学習データ収集システム **v3** へようこそ。\n\n回答すると**自動で保存**されます。\nヘッダーの「カテゴリ管理」でカテゴリの**追加・編集・削除**、\n「データ管理」でQ&Aの一括管理ができます。\n\nそれでは始めましょう！`;
   addMsg('ai', msg);
-  setTimeout(() => addMsg('ai', '👈 左のサイドバーからカテゴリを選んでください。'), 1200);
+  const guideMsg = window.innerWidth <= 640
+    ? '👆 上部のカテゴリからカテゴリを選んでください。'
+    : '👈 左のサイドバーからカテゴリを選んでください。';
+  setTimeout(() => addMsg('ai', guideMsg), 1200);
   initMobileSidebar();
 }
 
