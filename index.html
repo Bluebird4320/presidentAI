@@ -462,6 +462,12 @@
       <button class="modal-close" onclick="closeExport()">×</button>
     </div>
     <p class="modal-sub">蓄積したQ&Aデータ（プリセット＋AI自動生成）をダウンロードできます</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--ink-light);display:block;margin-bottom:6px;">出力範囲</label>
+      <select id="exportCatFilter" onchange="updateExportPreview()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;">
+        <option value="">すべて</option>
+      </select>
+    </div>
     <div class="tab-row">
       <button class="tab active" onclick="switchFmt('md',this)">Markdown</button>
       <button class="tab" onclick="switchFmt('json',this)">JSON</button>
@@ -691,6 +697,10 @@ let CATS = [
     defaultQs:['この会社を10年後にどういう会社にしたいですか？','社会に対してどのような価値を提供したいですか？','AIの普及によって当社のビジネスはどう変わりますか？','競合他社にはできない、当社だけの強みは何ですか？','今後注力したい事業領域はどこですか？','会社を成長させる上で最大の障壁は何だと思いますか？','業界の5年後をどのように見ていますか？','海外展開や新市場参入についてどのようにお考えですか？','会社として大切にしたいブランドイメージは何ですか？','後継者育成についてどのようにお考えですか？'] },
   { id:'hr', name:'給与・福利厚生・休暇', color:'#833C00', qs:[],
     defaultQs:['給与水準を決める際の考え方を教えてください。','社員の給与を上げる判断基準は何ですか？','有給休暇の取得についてどのようにお考えですか？','成果主義と年功序列、どちらを重視しますか？','福利厚生で最も力を入れていることは何ですか？','給与以外で社員に報いる方法として何を大切にしていますか？','副業・兼業についてどのようなお考えをお持ちですか？','育児・介護と仕事の両立についてどのようなサポートをしていますか？','賞与・インセンティブの設計で重視することは何ですか？','社員が「この会社で長く働きたい」と思える環境をどう作りますか？'] },
+  { id:'ng', name:'NG', color:'#CC0000', qs:[],
+    defaultQs:['社員として絶対にやってはいけない行動は何ですか？','会社として絶対に手を出してはいけないビジネスはありますか？','顧客対応で絶対にNGな言動を教えてください。','社内でのコミュニケーションでNGなことは何ですか？','どんな理由があっても許せない社員の行動はありますか？','経営判断としてやってはいけないことは何ですか？','会社の信頼を損なう行為として最も重大なものは何ですか？','取引先・顧客に対して絶対にしてはいけないことは何ですか？','チームワークを壊すNG行動を教えてください。','採用時点でNGとなる人物像はどんな人ですか？'] },
+  { id:'prohibited', name:'禁止事項', color:'#8B0000', qs:[],
+    defaultQs:['社内規定として明文化している禁止事項を教えてください。','情報管理・機密保持に関する禁止事項は何ですか？','SNSや社外での発言に関する禁止事項はありますか？','経費・金銭に関する禁止事項を教えてください。','取引先・顧客情報の取り扱いに関する禁止事項は何ですか？','副業・兼業に関して禁止していることはありますか？','社内での人間関係に関する禁止事項はありますか？','会社の設備・リソースの使用に関する禁止事項は何ですか？','ハラスメントに関してどのような禁止規定を設けていますか？','競合他社との関係において禁止していることは何ですか？'] },
 ];
 
 // ── STATE ──
@@ -1582,43 +1592,60 @@ function refreshFilterDropdown() {
 }
 
 // ── EXPORT ──
-function buildMD() {
+function buildMD(filterCatName) {
+  const data = filterCatName ? savedQAs.filter(q => q.catName === filterCatName) : savedQAs;
   const g = {};
-  savedQAs.forEach(q => { (g[q.catName]=(g[q.catName]||[])).push(q); });
-  let s = `# 社長AI 学習データ\n生成日時: ${new Date().toLocaleString('ja-JP')}\n総件数: ${savedQAs.length}件（うちAI生成: ${savedQAs.filter(q=>q.qType==='generated').length}件）\n\n---\n\n`;
+  data.forEach(q => { (g[q.catName]=(g[q.catName]||[])).push(q); });
+  let s = `# 社長AI 学習データ\n生成日時: ${new Date().toLocaleString('ja-JP')}\n総件数: ${data.length}件（うちAI生成: ${data.filter(q=>q.qType==='generated').length}件）\n\n---\n\n`;
   Object.entries(g).forEach(([cat,qs]) => {
     s += `## ${cat}\n\n`;
     qs.forEach((q,i) => { s += `### Q${i+1}${q.qType==='generated'?' ✨AI生成':''}: ${q.question}\n\n**A:** ${q.answer}\n\n---\n\n`; });
   });
   return s;
 }
-function buildJSON() {
-  return JSON.stringify({ meta:{createdAt:new Date().toISOString(),total:savedQAs.length,aiGenerated:savedQAs.filter(q=>q.qType==='generated').length}, data:savedQAs },null,2);
+function buildJSON(filterCatName) {
+  const data = filterCatName ? savedQAs.filter(q => q.catName === filterCatName) : savedQAs;
+  return JSON.stringify({ meta:{createdAt:new Date().toISOString(),total:data.length,aiGenerated:data.filter(q=>q.qType==='generated').length}, data:data },null,2);
 }
-function buildCSV() {
+function buildCSV(filterCatName) {
+  const data = filterCatName ? savedQAs.filter(q => q.catName === filterCatName) : savedQAs;
   const rows=[['No','カテゴリ','質問タイプ','質問','回答','編集済み','日時']];
-  savedQAs.forEach((q,i)=>rows.push([i+1,q.catName,q.qType==='generated'?'AI生成':'プリセット',`"${q.question}"`,`"${q.answer.replace(/"/g,'""')}"`,q.edited?'yes':'no',q.ts]));
+  data.forEach((q,i)=>rows.push([i+1,q.catName,q.qType==='generated'?'AI生成':'プリセット',`"${q.question}"`,`"${q.answer.replace(/"/g,'""')}"`,q.edited?'yes':'no',q.ts]));
   return rows.map(r=>r.join(',')).join('\n');
 }
 const builders = { md:buildMD, json:buildJSON, csv:buildCSV };
 
 function openExport() {
   if (!savedQAs.length) { toast('まだデータがありません'); return; }
-  document.getElementById('preview').textContent = builders[exportFmt]();
+  const sel = document.getElementById('exportCatFilter');
+  sel.innerHTML = '<option value="">すべて</option>';
+  CATS.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  updateExportPreview();
   document.getElementById('exportOverlay').classList.add('open');
 }
 function closeExport() { document.getElementById('exportOverlay').classList.remove('open'); }
 function overlayClickExport(e) { if (e.target.id==='exportOverlay') closeExport(); }
+function updateExportPreview() {
+  const cat = document.getElementById('exportCatFilter').value;
+  document.getElementById('preview').textContent = builders[exportFmt](cat);
+}
 function switchFmt(fmt,btn) {
   exportFmt=fmt;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('preview').textContent = builders[fmt]();
+  updateExportPreview();
 }
 function downloadFile() {
-  const fmtMap={md:['shacho_ai_data.md','text/markdown'],json:['shacho_ai_data.json','application/json'],csv:['shacho_ai_data.csv','text/csv']};
+  const cat = document.getElementById('exportCatFilter').value;
+  const suffix = cat ? `_${cat}` : '';
+  const fmtMap={md:[`shacho_ai_data${suffix}.md`,'text/markdown'],json:[`shacho_ai_data${suffix}.json`,'application/json'],csv:[`shacho_ai_data${suffix}.csv`,'text/csv']};
   const [name,type]=fmtMap[exportFmt];
-  const blob=new Blob([builders[exportFmt]()],{type});
+  const blob=new Blob([builders[exportFmt](cat)],{type});
   Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:name}).click();
   toast(`${name} をダウンロードしました`);
   closeExport();
